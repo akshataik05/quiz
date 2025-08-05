@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body { background: #ffffff; overflow-x: hidden; }
+
+    .welcome {
+      text-align: center;
+      padding: 50px 20px;
+      background: #f5f7fa;
+    }
+    .welcome h1 {
+      font-size: 3rem;
+      color: #4b0082;
+    }
+    .welcome p {
+      margin: 20px 0;
+      color: #444;
+      font-size: 1.1rem;
+    }
+    .welcome-icons {
+      display: flex; justify-content: center; flex-wrap: wrap;
+      margin: 30px auto;
+      max-width: 700px;
+    }
+    .welcome-icons img {
+      width: 50px; margin: 10px;
+      opacity: 0.8;
+      transition: transform 0.3s;
+    }
+    .welcome-icons img:hover {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+    .start-btn {
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      background-color: #4b0082;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .start-btn:hover { background-color: #360061; }
+
+    .quiz-section {
+      padding: 30px;
+      display: none;
+    }
+    .question-container {
+      background: #e8f0ff;
+      padding: 25px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    .question-container h2 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+    .options button {
+      display: block;
+      margin: 10px 0;
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border: 2px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease-in-out;
+      background: #fff;
+    }
+    .options button:hover {
+      background: #d6e0f5;
+    }
+    .correct {
+      background: #c8f7c5;
+      border-color: #2ecc71;
+    }
+    .wrong {
+      background: #f7c5c5;
+      border-color: #e74c3c;
+    }
+    .emoji {
+      font-size: 1.5rem;
+      display: inline-block;
+      margin-left: 10px;
+    }
+    #feedbackBox {
+      text-align: center;
+      color: #333;
+      margin-top: 20px;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+
+    .result {
+      text-align: center;
+      display: none;
+      padding: 40px 20px;
+    }
+    .result h2 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    .score-stats {
+      font-size: 1.2rem;
+      margin-bottom: 30px;
+    }
+
+    .charts {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .pie-chart {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: conic-gradient(green 0%, red 0);
+    }
+
+    .score-bar-container {
+      width: 80%;
+      height: 20px;
+      background-color: #ddd;
+      border-radius: 15px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(to right, #ff6f6f, #6eff94);
+    }
+
+    .retake-btn {
+      margin-top: 40px;
+      background: #4b0082;
+      color: #fff;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 5px;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="welcome">
+    <h1>Welcome to the Quiz!</h1>
+    <p>Test your knowledge across different tech topics.</p>
+    <div class="welcome-icons">
+      <img src="https://img.icons8.com/color/48/html-5--v1.png" />
+      <img src="https://img.icons8.com/color/48/css3.png" />
+      <img src="https://img.icons8.com/color/48/javascript.png" />
+      <img src="https://img.icons8.com/color/48/python.png" />
+      <img src="https://img.icons8.com/color/48/react-native.png" />
+    </div>
+    <button class="start-btn" onclick="startQuiz()">Start Quiz</button>
+  </div>
+
+  <div class="quiz-section" id="quizSection">
+    <div class="question-container" id="questionBox"></div>
+    <div class="options" id="optionsBox"></div>
+    <div id="feedbackBox"></div>
+  </div>
+
+  <div class="result" id="resultSection">
+    <h2>Your Score!</h2>
+    <div class="score-stats">
+      <div><strong id="scoreText"></strong></div>
+    </div>
+    <div class="charts">
+      <div class="pie-chart" id="pieChart"></div>
+      <div class="score-bar-container">
+        <div class="score-bar-fill" id="scoreBar"></div>
+      </div>
+    </div>
+    <button class="retake-btn" onclick="location.reload()">Retake Exam & Try for 100% 🎯</button>
+  </div>
+
+  <audio id="rightSound" src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3"></audio>
+  <audio id="wrongSound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3"></audio>
+
+  <script>
+    const questions = [
+      {
+        question: "What does HTML stand for?",
+        options: ["Hyper Trainer Marking Language", "Hyper Text Markup Language", "Hyper Text Marketing Language", "None of the above"],
+        answer: 1
+      },
+      {
+        question: "Which language is used for styling web pages?",
+        options: ["HTML", "JQuery", "CSS", "XML"],
+        answer: 2
+      },
+      {
+        question: "Which is not a JavaScript Framework?",
+        options: ["Python Script", "JQuery", "Django", "NodeJS"],
+        answer: 2
+      },
+      {
+        question: "Which is used for Connect To Database?",
+        options: ["PHP", "HTML", "JS", "All"],
+        answer: 0
+      },
+      {
+        question: "Which tool can you use to ensure code quality?",
+        options: ["Angular", "jQuery", "RequireJS", "ESLint"],
+        answer: 3
+      }
+    ];
+
+    let current = 0;
+    let score = 0;
+
+    function startQuiz() {
+      document.querySelector('.welcome').style.display = 'none';
+      document.getElementById('quizSection').style.display = 'block';
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const q = questions[current];
+      document.getElementById('questionBox').innerHTML = `<h2>${q.question}</h2>`;
+      const optionsHTML = q.options.map((opt, i) => `<button onclick="checkAnswer(${i})">${opt}</button>`).join('');
+      document.getElementById('optionsBox').innerHTML = optionsHTML;
+      document.getElementById('feedbackBox').innerHTML = '';
+    }
+
+    function checkAnswer(selected) {
+      const correct = questions[current].answer;
+      const buttons = document.querySelectorAll('.options button');
+      const feedbackBox = document.getElementById('feedbackBox');
+
+      if (selected === correct) {
+        buttons[selected].classList.add('correct');
+        buttons[selected].innerHTML += ' ✅ <span class="emoji">🎉</span>';
+        document.getElementById('rightSound').play();
+        feedbackBox.innerHTML = 'Correct Answer ✅ 🎉';
+        score++;
+      } else {
+        buttons[selected].classList.add('wrong');
+        buttons[selected].innerHTML += ' ❌ <span class="emoji">😢</span>';
+        document.getElementById('wrongSound').play();
+        feedbackBox.innerHTML = 'Wrong Answer ❌ 😢';
+      }
+
+      buttons.forEach(btn => btn.disabled = true);
+      setTimeout(() => {
+        current++;
+        feedbackBox.innerHTML = '';
+        if (current < questions.length) {
+          loadQuestion();
+        } else {
+          showResult();
+        }
+      }, 2000);
+    }
+
+    function showResult() {
+      document.getElementById('quizSection').style.display = 'none';
+      document.getElementById('resultSection').style.display = 'block';
+
+      const percentage = Math.round((score / questions.length) * 100);
+      document.getElementById('scoreText').innerText = `${score} / ${questions.length} (${percentage}%)`;
+
+      animatePieChart(percentage);
+      animateScoreBar(percentage);
+    }
+
+    function animatePieChart(percentage) {
+      let current = 0;
+      const pie = document.getElementById('pieChart');
+      const interval = setInterval(() => {
+        pie.style.background = `conic-gradient(green ${current}%, red 0)`;
+        current++;
+        if (current > percentage) clearInterval(interval);
+      }, 10);
+    }
+
+    function animateScoreBar(percentage) {
+      let current = 0;
+      const bar = document.getElementById('scoreBar');
+      const interval = setInterval(() => {
+        bar.style.width = `${current}%`;
+        current++;
+        if (current > percentage) clearInterval(interval);
+      }, 10);
+    }
+  </script>
+</body>
+</html>
